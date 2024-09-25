@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS 180 Project 2</title>
+</head>
+<body style="font-family: Verdana;">
+    <center><h1>CS 180 Project 2 - Geoffrey Xiang</h1></center>
+    <h2>Part 1: Fun with Filters!</h2>
+    <h3>Part 1.1: Finite Difference Operator</h3>
+    <p>
+	I convolved the original image using the finite difference operators Dx = [1, -1] and Dy = [1, -1].T. Then, by using Euclidean Distance from (0, 0) to represent the magnitude for each pixel (essentially sqrt((df/dx)^2+(df/dy)^2)), I used the resulting images from the convolutions with Dx and Dy to create an edge image. After playing with the threshold values, I found that 0.3 worked very well in defining the edges of the image.
+    </p>
+    <div class="container">
+	<figure>
+	    <img src="assets/cameraman.png">
+	    <figcaption>Original cameraman.png</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/1.1/dx_cameraman.png"/>
+	    <figcaption>x direction (Dx) filter</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/1.1/dy_cameraman.png"/>
+	    <figcaption>y direction (Dy) filter</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/1.1/edge_cameraman.png"/>
+	    <figcaption>Edge image with 0.3 threshold</figcaption>
+	</figure>
+
+    </div>
+    <h3>Part 1.2: Derivative of Gaussian (DoG) Filter</h3>
+    <p>
+	To improve upon edge detection with the finite difference operators, I convolved the image with a gaussian first. This ended up reducing a lot of noise, leading to needing a much lower threshold (from 0.3 to 0.1). In addition to that, the lines in the edge image are now much clearer and well-defined. 
+    </p>
+    <div class="container">
+	<figure>
+	    <img src="assets/cameraman.png">
+	    <figcaption>Original cameraman.png</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/1.2/gaussian_blur_cameraman.png"/>
+	    <figcaption>Blurred with Gaussian</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/1.2/blurred_dx_cameraman.png"/>
+	    <figcaption>x direction (Dx) filter on blurred image</figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/1.2/blurred_dy_cameraman.png"/>
+	    <figcaption>y direction (Dy) filter on blurred image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/1.2/edge_with_blur_cameraman.png"/>
+	    <figcaption>Edge image with 0.1 threshold</figcaption>
+	</figure>
+    </div>
+    <p>
+	Instead of having to do two convolutions (one to apply Gaussian blur, then one to use the finite difference operator), we achieve the same effect by applying one convolution to the original image. By first precomputing the gaussian convolved with the finite difference operators, I could use a single DoG filter to get the same exact edge image result. Precomputing the DoG filter can save lots of computation for large images since the precomputation is much smaller than a convolution using a large image. 
+    </p>
+    <div class="container">
+	<figure>
+	    <img src="assets/1.2/gaussian_dx_cameraman.png"/>
+	    <figcaption>x direction DoG filter</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/1.2/gaussian_dy_cameraman.png"/>
+	    <figcaption>y direction DoG filter</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/1.2/edge_with_blur2_cameraman.png"/>
+	    <figcaption>Edge image (same result as previous edge image)</figcaption>
+	</figure>
+    </div>
+    <h2>Part 2: Fun with Frequencies!</h2>
+    <h3>Part 2.1: Image "Sharpening"</h3>
+    <p>
+	In order to "sharpen" an image, we can first extract the high frequencies of the image by subtracting a Gaussian blurred version from the original image. Then, adding those frequencies back to the image with a weight (alpha) will enhance finer details and edges within the image. This leads to a sharpening effect! 
+    </p>
+    <div class="container">
+	<figure>
+	    <img src="assets/taj.jpg"/>
+	    <figcaption>Original image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.1/low_pass_taj.jpg"/>
+	    <figcaption>Blurred with Gaussian</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.1/high_pass_taj.jpg"/>
+	    <figcaption>High frequencies</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.1/sharpened_taj.jpg"/>
+	    <figcaption>Sharpened image</figcaption>
+	</figure>
+    </div>
+    <p>
+	The way we sharpened the image took a few steps, but it can be simplified to one convolution. By simplifying the steps (and equation) that brought us to the final sharpened image, I found that the entire process was the same as convolving the original image by (identity + alpha * (identity - gaussian)), where identity is a zeroed out matrix with a 1 at the very center. This newly derived filter is the unsharp mask filter!
+    </p>
+    <div class="container">
+	<figure>
+	    <img src="assets/coraline_squid.jpeg"/>
+	    <figcaption>Original image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.1/unsharp_mask_filtered_coraline_squid.jpeg"/>
+	    <figcaption>Unsharp mask filtered image</figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/mlk.jpg"/>
+	    <figcaption>Original image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.1/unsharp_mask_filtered_mlk.jpg"/>
+	    <figcaption>Unsharp mask filtered image</figcaption>
+	</figure>
+    </div>
+    <p>
+	An additional way to test my unsharp mask filter is to blur an image, and then apply the unsharp mask filter on it. If the filter works well, then details that were blurred out should reappear in the filtered image. We can see that in the following image, the unsharp mask filter succeeds in adding back some details from the original image. 
+    </p>
+    <div class="container">
+	<figure>
+	    <img src="assets/wall.png"/>
+	    <figcaption>Original image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.1/blurry_wall.png"/>
+	    <figcaption>Blurred image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.1/unsharp_mask_filtered_wall.png"/>
+	    <figcaption>Unsharp mask filter on blurry image</figcaption>
+	</figure>
+    </div>
+    <h3>Part 2.2: Hybrid Images</h3>
+    <p>
+	A hybrid image looks different depending how far away the observer is. This is possible since we see high frequencies better at close range and vice versa for low frequencies. Now, we can take the high frequencies of one image and overlay them on the low frequencies of another image. After aligning the images and calibrating the kernel size and sigma for the Gaussian filters used to extract the frequencies, we now have hybrid images!
+    </p>
+    <center><h4>Derek and Nutmeg</h4></center>
+    <div class="container">
+	<figure>
+	    <img src="assets/DerekPicture.jpg"/>
+	    <figcaption>Original Derek</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.2/DerekPicture.jpg+nutmeg.jpg"/>
+	    <figcaption>Hybrid image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/nutmeg.jpg"/>
+	    <figcaption>Original Nutmeg</figcaption>
+	</figure>
+    </div>
+    <center><h4>(Minecraft) Wolf</h4></center>
+    <center>
+	<p>
+	    This hybrid image wasn't a good, likely due to how the real wolf has a ton of detail in the fur and silhouette. The two images didn't exactly align the best either since the bodies weren't in the same relative positions from the faces. 
+	</p>
+    </center>
+    <div class="container">
+	<figure>
+	    <img src="assets/mc_wolf.jpg"/>
+	    <figcaption>Original Minecraft wolf</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.2/mc_wolf.jpg+wolf.jpg"/>
+	    <figcaption>Hybrid image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/wolf.jpg"/>
+	    <figcaption>Original wolf</figcaption>
+	</figure>
+    </div>
+    <center><h4>Pizookie!</h4></center>
+    <center><p>Since this hybrid image worked pretty well both close and afar (aside from the edges of the pizza being very noticeable from close up), I included the Fourier transform for each image.</p></center>
+    <div class="container">
+	<figure>
+	    <img src="assets/pizza.jpg"/>
+	    <figcaption>Original pizza</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.2/pizza.jpg+cookie.jpg"/>
+	    <figcaption>Hybrid image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/cookie.jpg"/>
+	    <figcaption>Original cookie</figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.2/fourier_pizza.jpg"/>
+	    <figcaption>Original pizza Fourier</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.2/hybrid_freq_pizza.jpg+cookie.jpg"/>
+	    <figcaption>Hybrid image Fourier</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.2/fourier_cookie.jpg"/>
+	    <figcaption>Original cookie Fourier</figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.2/low_freq_pizza.jpg"/>
+	    <figcaption>Low frequencies Fourier</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.2/high_freq_cookie.jpg"/>
+	    <figcaption>High frequencies Fourier</figcaption>
+	</figure>
+    </div>
+    <h3>Part 2.3-2.4: Gaussian and Laplacian Stacks + Multiresolution Blending (The Oraple!)</h3>
+    <p>
+	In order to start blending images together, I first have to implement Gaussian and Laplacian stacks. I've implemented a Gaussian stack by applying the same gaussian filter to each subsequent level of the stack. Then, for the Laplacian stack, each level is the difference between two consecutive layers of the Gaussian stack. 
+    </p>
+    <p>
+	After constructing a Gaussian stack for each mask filter and a Laplacian stack for each image, we can now use them to blend the images. At each level, we multiply the Gaussian stack mask with the corresponding Laplacian stack image (direct pixel by pixel multiplication, not matrix multiplication) before combining the two with simple addition. At the very bottom level of the Laplacian stack, I added the bottom level of the corresponding Gaussian stack used to construct the Laplacian stack in order to restore the low frequencies of the original image when we eventually collapse the stack by adding all of the blended image layers to each other. I also made sure to clip any values outside of [0, 255]. 
+    </p>
+    <p>
+	I've illustrated the above process in the images below. In each layer of the stacks, from left to right, I have the left mask, the left mask * left image frequencies, the hybrid image at that frequency level, the right mask * right image frequencies, and the right mask. The penultimate images use the bottom of the Gaussian stack instead of the Laplacian stack (again, to add back the low frequencies). All of the center hybrid images for each frequency level get collapsed (added together) to produce the final image! 
+    </p>
+    <center><h4>The Oraple</h4></center>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/left_mask_0_apple.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_left_0_apple.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_0_apple.jpeg+orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_right_0_orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/right_mask_0_orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/left_mask_2_apple.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_left_2_apple.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_2_apple.jpeg+orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_right_2_orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/right_mask_2_orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/left_mask_4_apple.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_left_4_apple.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_4_apple.jpeg+orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_right_4_orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/right_mask_4_orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/left_mask_5_apple.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_left_5_apple.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_5_apple.jpeg+orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_right_5_orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/right_mask_5_orange.jpeg"/>
+	    <figcaption></figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/final_blended_apple.jpeg+orange.jpeg"/>
+	    <figcaption>Final blended image!</figcaption>
+	</figure>
+    </div>
+    <center><h4>Day or Night</h4></center>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/left_mask_0_day_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_left_0_day_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_0_day_view.jpg+night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_right_0_night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/right_mask_0_night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/left_mask_2_day_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_left_2_day_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_2_day_view.jpg+night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_right_2_night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/right_mask_2_night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/left_mask_4_day_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_left_4_day_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_4_day_view.jpg+night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_right_4_night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/right_mask_4_night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/left_mask_5_day_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_left_5_day_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_5_day_view.jpg+night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/blended_right_5_night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/2.3/right_mask_5_night_view.jpg"/>
+	    <figcaption></figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/final_blended_day_view.jpg+night_view.jpg"/>
+	    <figcaption>Final blended image!</figcaption>
+	</figure>
+    </div>
+    <center><h4>Disney in a Snow Globe (Irregular Mask)</h4></center>
+    <div class="container">
+	<figure>
+	    <img src="assets/snow_globe.jpg"/>
+	    <figcaption>Original snow globe image</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/globe_mask.jpg"/>
+	    <figcaption>Mask for snow globe (created using Photoshop)</figcaption>
+	</figure>
+	<figure>
+	    <img src="assets/fireworks.jpg"/>
+	    <figcaption>Original Disney fireworks image</figcaption>
+	</figure>
+    </div>
+    <div class="container">
+	<figure>
+	    <img src="assets/2.3/final_blended_snow_globe.jpg_fireworks.jpg"/>
+	    <figcaption>Final blended image</figcaption>
+	</figure>
+    </div>
+
+</body>
+<style>
+    .container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+    }
+
+    figure {
+	display: table;
+	margin-left: 5px;
+	margin-right: 5px;
+    }
+
+    figcaption {
+	display: table-caption;
+	caption-side: bottom;
+	text-align: center;
+	font-size: 14px;
+    }
+
+    img {
+	max-height: 250px;
+	max-width: 250px;
+	border: 1px solid black;
+    }
+</style>
+</html>
